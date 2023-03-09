@@ -11,9 +11,9 @@ void write_color(std::ostream &out, color pc, int spp) {
     auto b = pc.z();
 
     auto scale = 1.0 / spp;
-    r *= scale;
-    g *= scale;
-    b *= scale;
+    r = sqrt(r * scale);
+    g = sqrt(g * scale);
+    b = sqrt(b * scale);
 
     out << static_cast<int>(256 * clamp(r, 0.0, 0.999)) << ' '
         << static_cast<int>(256 * clamp(g, 0.0, 0.999)) << ' '
