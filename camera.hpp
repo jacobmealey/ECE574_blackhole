@@ -15,7 +15,6 @@ class camera {
             auto w = unit_vector(position - lookat);
             auto u = unit_vector(cross(vup, w));
             auto v = cross(w, u);
-            auto focal_length = 1.0;
             origin = position;
             horizontal = viewport_width * u;
             vertical = viewport_height * v;;

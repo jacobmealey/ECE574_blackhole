@@ -5,6 +5,7 @@
 #include "vec3.hpp"
 #include "hittable_list.hpp"
 #include "sphere.hpp"
+#include "blackhole.hpp"
 #include "const.hpp"
 #include "camera.hpp"
 #include "material.hpp"
@@ -74,28 +75,24 @@ int main() {
 
     // Image :)
     const double aspect_ratio = 3.0/2.0;
-    const int image_width = 400;
+    const int image_width = 1000;
     const int image_height = static_cast<int>(image_width/aspect_ratio);
-    const int spp = 500;
-    const int max_depth = 50;
+    const int spp = 5;
+    const int max_depth = 15;
 
     // Worldly
     hittable_list world;
 
-    auto ground_material = std::make_shared<checker_texture>(color(0.5, 0.5, 0.5), color(1.0, 1.0, 1.0));
-    world.add(std::make_shared<sphere>(point3(0,-1000,0), 1000, std::make_shared<lambertian>(ground_material)));
-    // hittable_list world = random_scene();
-    auto material2 = std::make_shared<lambertian>(color(0.4, 0.2, 0.1));
-    world.add(std::make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+    auto ground_material = std::make_shared<checker_texture>(color(0.0, 0.0, 0.0), color(1.0, 0.0, 0.0));
+    world.add(
+            std::make_shared<blackhole>(point3(0, 0, 0), 1, 
+                                        std::make_shared<lambertian>(ground_material)));
 
-    auto material3 = std::make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-    world.add(std::make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
-
-
-    
+    world.add(
+            std::make_shared<sphere>(point3(0, 0, 4), 1, 
+                                        std::make_shared<lambertian>(ground_material)));
     // Camera
     camera cam(point3(12, 2, 3), point3(0, 0, 0), vec3(0, 1, 0), 30, aspect_ratio);
-
 
     // Render
     std::cout << "P3\n" << image_width << ' ' << image_height<< "\n255" << std::endl;
@@ -108,7 +105,7 @@ int main() {
                 auto u = (i + random_double()) / (image_width - 1);
                 auto v = (j + random_double()) / (image_height - 1);
                 ray r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world, max_depth);
+                pixel_color = pixel_color +  ray_color(r, world, max_depth);
             }
             write_color(std::cout, pixel_color, spp);
         }

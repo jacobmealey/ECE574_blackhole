@@ -16,6 +16,9 @@ class solid_color: public texture {
         solid_color(double r, double g, double b): color_value(color(r, g, b)) {}
 
         virtual color value(double u, double v, const point3 &p) const override {
+            (void)(u);
+            (void)(v);
+            (void)(p);
             return color_value;
         }
     private:
@@ -24,6 +27,8 @@ class solid_color: public texture {
 
 class checker_texture: public texture {
     public:
+        std::shared_ptr<texture> even;
+        std::shared_ptr<texture> odd;
         checker_texture() {}
         checker_texture(std::shared_ptr<texture> e, std::shared_ptr<texture> o): 
             even(e), odd(o) {}
@@ -38,9 +43,6 @@ class checker_texture: public texture {
             else 
                 return even->value(u,v,p);
         } 
-    public:
-        std::shared_ptr<texture> odd;
-        std::shared_ptr<texture> even;
 };
 
 #endif

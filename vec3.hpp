@@ -36,7 +36,7 @@ class vec3 {
             return *this *= 1/t;
         }
 
-        vec3 &operator+=(const vec3 &v) {
+        vec3 &operator+=(vec3 &v) {
             e[0] += v.e[0];
             e[1] += v.e[1];
             e[2] += v.e[2];
@@ -100,8 +100,38 @@ inline vec3 operator*(const vec3 &v, double t) {
     return t * v;
 }
 
-inline vec3 operator/(vec3 v, double t) {
+inline vec3 operator/(const vec3 &v, double t) {
     return (1/t) * v;
+}
+
+inline vec3 operator/(const vec3 &v, const vec3 &u) {
+    return vec3(v.e[0] / u.e[0],
+                v.e[1] / u.e[1],
+                v.e[2] / u.e[2]);
+}
+
+inline bool operator<(const vec3 &v, double t) {
+    for(int i = 0; i < 3; i++) {
+        if(v.e[i] < t) return true;
+    }
+    return false;
+}
+
+inline bool operator<(double t, const vec3 &v) {
+    for(int i = 0; i < 3; i++) {
+        if(v.e[i] > t) return true;
+    }
+    return false;
+}
+inline bool operator>(vec3 v, double t) {
+    return v.e[0] > t && v.e[1] > t && v.e[2] > t;
+}
+
+inline bool operator>(double t, const vec3 &v) {
+    for(int i = 0; i < 3; i++) {
+        if(v.e[i] < t) return true;
+    }
+    return false;
 }
 
 inline double dot(const vec3 &u, const vec3 &v) {
@@ -118,6 +148,12 @@ inline vec3 cross(const vec3 &u, const vec3 &v) {
 
 inline vec3 unit_vector(vec3 v) {
     return v/v.length();
+}
+
+inline vec3 vecpow(const vec3 &v, float p) {
+    return vec3(pow(v.e[0], p),
+                pow(v.e[1], p),
+                pow(v.e[2], p));
 }
 
 vec3 random_in_unit_sphere() {
