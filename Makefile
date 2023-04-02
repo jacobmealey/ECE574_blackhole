@@ -1,7 +1,7 @@
 CXX =g++
 OBJS = main.o ray.o color.o vec3.o
 TARGET = blackhole
-CXXFLAGS = -Wall -Wextra -O3 
+CXXFLAGS = -Wall -O3 -fopenmp
 SRCS := $(wildcard *.*pp)
 OBJS := $(patsubst *.*pp, $.o, $(SRCS)) 
 

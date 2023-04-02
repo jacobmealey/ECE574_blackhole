@@ -76,7 +76,7 @@ int main() {
 
     // Image :)
     const double aspect_ratio = 3.0/2.0;
-    const int image_width = 1000;
+    const int image_width = 200;
     const int image_height = static_cast<int>(image_width/aspect_ratio);
     const int spp = 50;
     const int max_depth = 150;
@@ -84,8 +84,9 @@ int main() {
     camera cam(point3(12, 2, 3), point3(0, 0, 0), vec3(0, 1, 0), 30, aspect_ratio);
     // Worldly
     hittable_list world = random_scene();
-
-    std::cout << "P3\n" << image_width << ' ' << image_height<< "\n255" << std::endl;
+    
+    // create pixel buffer
+    color *buffer = (color *)malloc(image_height*image_width*sizeof(color));
 
     for(int j = image_height- 1; j >= 0; j--) {
         std::cerr << "\rScanlines remaning: " << j << ' ' << std::flush;
@@ -97,7 +98,15 @@ int main() {
                 ray r = cam.get_ray(u, v);
                 pixel_color = pixel_color +  ray_color(r, world, max_depth);
             }
-            write_color(std::cout, pixel_color, spp);
+            buffer[j * image_width + i] = pixel_color;
+        }
+    }
+
+    std::cout << "P3\n" << image_width << ' ' << image_height<< "\n255" << std::endl;
+
+    for(int j = image_height- 1; j >= 0; j--) {
+        for(int i = 0; i < image_width; ++i) {
+            write_color(std::cout, buffer[j * image_width + i], spp);
         }
     }
     std::cerr << "\nDone!\n";
