@@ -88,6 +88,7 @@ int main() {
     // create pixel buffer
     color *buffer = (color *)malloc(image_height*image_width*sizeof(color));
 
+    // Generate the images in a buffer
     for(int j = image_height- 1; j >= 0; j--) {
         std::cerr << "\rScanlines remaning: " << j << ' ' << std::flush;
         for(int i = 0; i < image_width; ++i) {
@@ -102,8 +103,8 @@ int main() {
         }
     }
 
+    // Write buffer to ppm format and stdout
     std::cout << "P3\n" << image_width << ' ' << image_height<< "\n255" << std::endl;
-
     for(int j = image_height- 1; j >= 0; j--) {
         for(int i = 0; i < image_width; ++i) {
             write_color(std::cout, buffer[j * image_width + i], spp);
