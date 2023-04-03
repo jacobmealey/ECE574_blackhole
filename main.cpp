@@ -1,3 +1,4 @@
+#include <omp.h>
 #include <iostream>
 
 #include "color.hpp"
@@ -76,7 +77,7 @@ int main() {
 
     // Image :)
     const double aspect_ratio = 3.0/2.0;
-    const int image_width = 200;
+    const int image_width = 400;
     const int image_height = static_cast<int>(image_width/aspect_ratio);
     const int spp = 50;
     const int max_depth = 150;
@@ -89,18 +90,27 @@ int main() {
     color *buffer = (color *)malloc(image_height*image_width*sizeof(color));
 
     // Generate the images in a buffer
+#pragma omp parallel  
+    {
+
+#pragma omp for
     for(int j = image_height- 1; j >= 0; j--) {
-        std::cerr << "\rScanlines remaning: " << j << ' ' << std::flush;
+        //std::cerr << "\rScanlines remaning: " << j << ' ' << std::flush;
         for(int i = 0; i < image_width; ++i) {
             color pixel_color(0, 0, 0);
-            for(int s = 0; s < spp; s++){
-                auto u = (i + random_double()) / (image_width - 1);
-                auto v = (j + random_double()) / (image_height - 1);
-                ray r = cam.get_ray(u, v);
-                pixel_color = pixel_color +  ray_color(r, world, max_depth);
-            }
+            //for(int s = 0; s < spp; s++){
+            //    auto u = (i + random_double()) / (image_width - 1);
+            //    auto v = (j + random_double()) / (image_height - 1);
+            //    ray r = cam.get_ray(u, v);
+            //    pixel_color = pixel_color +  ray_color(r, world, max_depth);
+            //}
+            auto u = (i * 1.0) / (image_width - 1);
+            auto v = (j * 1.0) / (image_height - 1);
+            ray r = cam.get_ray(u, v);
+            pixel_color = ray_color(r, world, max_depth) * 10;
             buffer[j * image_width + i] = pixel_color;
         }
+    }
     }
 
     // Write buffer to ppm format and stdout
