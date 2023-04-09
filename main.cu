@@ -81,30 +81,26 @@ __device__ color ray_color(const ray &r) {
     return (1.0 - t)*color(1.0f, 1.0f, 1.0f) + t*color(0.5f, 0.7f, 1.0f);
 }
 
-__global__ void render(float *buff, int width, int height, 
-                       const point3& origin,  const point3& horizontal, 
-                       const point3& vertical, const point3& lower_left_corner) {
+__global__ void render(color *buff, int width, int height,  
+        vec3 lower_left_corner, vec3 horizontal, vec3 vertical, vec3 origin){
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= width) || (j >= height)) 
         return;
 
-    float u = float(i) / (width - 1);
-    float v = float(j) / (height -1);
+    int loc = j*width + i;
+    float u = float(i) / width;
+    float v = float(j) / height;
 
-    ray r(origin, lower_left_corner + u*horizontal + v*vertical - origin);
-
-    int loc = j*width*3 + i*3;
-    buff[loc] = float(i) / width;
-    buff[loc + 1] = float(j) / height;
-    buff[loc + 2] = 0.2;
+    //buff[loc] = color(float(i)/width, float(j)/height, 0.2);
+    buff[loc] = ray_color(ray(origin, lower_left_corner + u*horizontal + v*vertical));
 }
 
 int main() {
 
     // Image :)
-    const double aspect_ratio = 3.0/2.0;
-    int image_width = 1200;
+    const double aspect_ratio = 2.0/3.0;
+    int image_width = 600;
     int image_height = image_width*aspect_ratio;
     int nx = image_width;
     int ny = image_height;
@@ -113,7 +109,7 @@ int main() {
     //int image_height = static_cast<int>(image_width/aspect_ratio);
     //const int spp = 50;
     //const int max_depth = 150;
-    int size = image_width * image_height * 3;
+    int size = image_width * image_height;
     dim3 blocks(nx/tx+1,ny/ty+1);
     dim3 threads(tx,ty);
 
@@ -122,21 +118,18 @@ int main() {
     //hittable_list world = random_scene();
     
     // create pixel buffer
-    float *cuda_buff;
+    color *cuda_buff;
     float viewport_height = 2.0;
     float viewport_width = viewport_height*aspect_ratio; 
     float focal_length = 1.0;
-    point3 origin = point3(0, 0, 0);
-    vec3 horizontal = vec3(viewport_width, 0, 0);
-    vec3 vertical = vec3(viewport_height, 0, 0);
-    vec3 lower_left_corner = origin - horizontal/2 - vertical/2 - vec3(0, 0, focal_length);
-    cudaError_t result = cudaMallocManaged((void **) &cuda_buff, size*sizeof(float));
+    
+    cudaError_t result = cudaMallocManaged((void **) &cuda_buff, size*sizeof(color));
     if(result) {
         std::cerr << "Error allocating GPU memory: " << cudaGetErrorString(result) << std::endl;
         exit(1);
     }
-    render<<<blocks, threads>>>(cuda_buff, image_width, image_height, origin,
-                                horizontal, vertical, lower_left_corner);
+    render<<<blocks, threads>>>(cuda_buff, image_width, image_height, 
+            vec3(0, 0, -2), vec3(viewport_width, 0, 0), vec3(0, viewport_height, 0), vec3(0, 0, 0));
 
     cudaDeviceSynchronize();
     //result = cudaMemcpy(buffer, cuda_buff, size * sizeof(float), cudaMemcpyDeviceToHost);
@@ -169,10 +162,10 @@ int main() {
     std::cout << "P3\n" << image_width << ' ' << image_height<< "\n255" << std::endl;
     for(int j = image_height- 1; j >= 0; j--) {
         for(int i = 0; i < image_width; ++i) {
-            int loc = j * image_width*3 + i*3;
-            float r = cuda_buff[loc];
-            float g = cuda_buff[loc + 1];
-            float b = cuda_buff[loc + 2];
+            int loc = j * image_width + i;
+            float r = cuda_buff[loc].x();
+            float g = cuda_buff[loc].y();
+            float b = cuda_buff[loc].z();
             std::cout << int(255.99 *r) << " " << int(255.99 *g) << " " << int(255.99 *b) << std::endl;
 
             //color pixel = color(buffer[loc], buffer[loc + 1], buffer[loc + 2]);
