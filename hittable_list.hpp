@@ -1,19 +1,19 @@
 #ifndef HITTABLE_LIST_H
 #define HITTABLE_LIST_H
 
-#include "hittable.hpp"
+#include "hittable.h"
 
 #include <memory>
 #include <vector>
 
 class hittable_list : public hittable {
     public: 
-        hittable_list() {}
-        hittable_list(std::shared_ptr<hittable> object) { add(object); }
+        __device__ hittable_list() {}
+        __device__ hittable_list(std::shared_ptr<hittable> object) { add(object); }
 
-        void clear() { objects.clear(); }
-        void add(std::shared_ptr<hittable> object) { objects.push_back(object); }
-        virtual bool hit(const ray &r, 
+        __device__ void clear() { objects.clear(); }
+        __device__ void add(std::shared_ptr<hittable> object) { objects.push_back(object); }
+        __device__ virtual bool hit(const ray &r, 
                          double t_min, 
                          double t_max, 
                          hit_record &rec) const override;
@@ -22,7 +22,7 @@ class hittable_list : public hittable {
         std::vector<std::shared_ptr<hittable>> objects;
 };
 
-bool hittable_list::hit(const ray &r, double t_min, double t_max, hit_record &rec) const {
+__device__ bool hittable_list::hit(const ray &r, double t_min, double t_max, hit_record &rec) const {
     hit_record temp_rec;
     bool hit_anything = false;
     auto closest_so_far = t_max;

@@ -1,16 +1,16 @@
 #ifndef SPHERE_HPP
 #define SPHERE_HPP
 
-#include "hittable.hpp"
-#include "vec3.hpp"
+#include "hittable.h"
+#include "vec3.h"
 
 class sphere : public hittable {
     public:
-        sphere() {}
-        sphere(point3 cen, double r, std::shared_ptr<material> m): 
+        __device__ sphere() {}
+        __device__ sphere(point3 cen, double r, std::shared_ptr<material> m): 
             center(cen), radius(r), mat_ptr(m){};
 
-        virtual bool hit(const ray& r,
+        __device__ virtual bool hit(const ray& r,
                          double t_min, 
                          double t_max, 
                          hit_record &rec) const override;
@@ -20,7 +20,7 @@ class sphere : public hittable {
         double radius;
         std::shared_ptr<material> mat_ptr;
     private:
-        static void get_sphere_uv(const point3 &p, double &u, double &v){
+        __device__ static void get_sphere_uv(const point3 &p, double &u, double &v){
             double theta = acos(-p.y());
             double phi = atan2(-p.z(), p.x()) + pi;
 
@@ -29,7 +29,7 @@ class sphere : public hittable {
         }
 };
 
-bool sphere::hit(const ray &r, double t_min, double t_max, hit_record &rec) const {
+__device__ bool sphere::hit(const ray &r, double t_min, double t_max, hit_record &rec) const {
     vec3 oc = r.origin() - center;
     auto a = r.direction().length_squared();
     auto half_b = dot(oc, r.direction());

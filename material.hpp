@@ -1,25 +1,25 @@
 #ifndef MATERIAL_HPP
 #define MATERIAL_HPP
 
-#include "color.hpp"
-#include "ray.hpp"
-#include "hittable.hpp"
-#include "texture.hpp"
+#include "color.h"
+#include "ray.h"
+#include "hittable.h"
+#include "texture.h"
 
 struct hit_record;
 
 class material {
     public:
-        virtual bool scatter(
+        __device__ virtual bool scatter(
             const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered
         ) const = 0;
 };
 
 class lambertian: public material {
     public:
-        lambertian(const color &a): albedo(std::make_shared<solid_color>(a)) {}
-        lambertian(std::shared_ptr<texture> a): albedo(a) {}
-        virtual bool scatter(
+        __device__ lambertian(const color &a): albedo(std::make_shared<solid_color>(a)) {}
+        __device__ lambertian(std::shared_ptr<texture> a): albedo(a) {}
+        __device__ virtual bool scatter(
             const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered
         ) const override {
             (void)(r_in);
@@ -39,9 +39,9 @@ class lambertian: public material {
 
 class metal: public material {
     public:
-        metal(const color &a, double f): albedo(a), fuzz(f < 1 ? f: 1) {}
+        __device__ metal(const color &a, double f): albedo(a), fuzz(f < 1 ? f: 1) {}
 
-        virtual bool scatter(
+        __device__ virtual bool scatter(
             const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered
         ) const override {
             vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
