@@ -57,6 +57,14 @@ class vec3 {
             return(fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
         }
 
+        __device__ static vec3 random(curandState *st) {
+            return vec3(random_double(st), random_double(st), random_double(st));
+        }
+
+         __device__ static vec3 random(double min, double max, curandState *st) {
+            return vec3(random_double(min,max, st), random_double(min,max, st), random_double(min,max,st));
+        }
+
     public:
         double e[3];
 };
@@ -149,19 +157,17 @@ __host__ __device__ inline vec3 vecpow(const vec3 &v, float p) {
                 pow(v.e[2], p));
 }
 
-/*
-__host__ __device__ vec3 random_in_unit_sphere() {
+__device__ vec3 random_in_unit_sphere(curandState *st) {
     while(true) {
-        auto p = vec3::random(-1, 1);
+        auto p = vec3::random(-1, 1, st);
         if(p.length_squared() >= 1) continue;
         return p;
     }
 }
 
-__host__ __device__ vec3 random_unit_vector() {
-    return unit_vector(random_in_unit_sphere());
+__device__ vec3 random_unit_vector(curandState *st) {
+    return unit_vector(random_in_unit_sphere(st));
 }
-*/
 
 __host__ __device__ vec3 reflect(const vec3 &v, const vec3 &n) {
     return v - 2*dot(v, n)*n;

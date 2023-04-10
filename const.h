@@ -16,19 +16,16 @@ __device__ inline float degrees_to_radians(float degrees){
 }
 
 // rand num between 0 and 1
-// Unsure how random this si...
-__device__ inline float random_double() {
-    curandState st;
-    return curand(&st);
+// Unsure how random this is...
+__device__ inline float random_double(curandState *st) {
+    return curand_uniform(st);
     //return rand() / (RAND_MAX + 1.0);
 }
 
-/*
 // rand num between min and max
-__device__ inline double random_double(double min, double max) {
-    return min + (max - min) * random_double();
+__device__ inline double random_double(double min, double max, curandState *st) {
+    return min + (max - min) * random_double(st);
 }
-*/
 
 __device__ inline float clamp(float x, float min, float max) {
     if(x < min) return min;
