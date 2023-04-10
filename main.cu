@@ -11,31 +11,7 @@
 //#include "texture.h"
 
 
-__device__ float hit_sphere(const point3& center, double radius, const ray& r) {
-    vec3 oc = r.origin() - center;
-    auto a = r.direction().length_squared();
-    auto half_b = dot(oc, r.direction());
-    auto c = dot(oc, oc) - radius*radius;
-
-    auto discriminant = (half_b)*(half_b)  - a*c;
-    // didn't hit spere
-    if(discriminant < 0){
-        return -1.0f;
-    }else {
-        return (-half_b -sqrtf(discriminant))/(a);
-    }
-
-    
-}
-
 __device__ color ray_color(const ray &r, hittable **world) {
-    //auto t = hit_sphere(point3(0, 0, -1), 0.5, r);
-    //if(t > 0){
-    //    vec3 N = unit_vector(r.at(t) - vec3(0, 0, -1));
-    //    return 0.5*color(N.x() + 1, N.y() + 1, N.z() + 1);
-
-    //}
-
     hit_record rec;
     if((*world)->hit(r, 0, infinity, rec)){
         return 0.5*(rec.normal + color(1, 1, 1));
@@ -54,19 +30,24 @@ __global__ void create_world(hittable **list, hittable **world) {
     }
 }
 
-__global__ void render(color *buff, int width, int height,  
-        vec3 lower_left_corner, vec3 horizontal, vec3 vertical, vec3 origin, hittable **world){
+__global__ void render(color *buff, int width, int height, vec3 lower_left_corner, 
+                        vec3 horizontal, vec3 vertical, vec3 origin, hittable **world, int spp){
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= width) || (j >= height)) 
         return;
-
     int loc = j*width + i;
-    float u = float(i) / width;
-    float v = float(j) / height;
+    color pixel(0, 0, 0);
+    for(int s = 0; s < spp; s++) {
+        float u = (float(i) + random_double()) / width;
+        float v = (float(j) + random_double()) / height;
+        ray r(origin, lower_left_corner + u*horizontal + v*vertical);
+        pixel = pixel + ray_color(r, world);
+    }
+
 
     //buff[loc] = color(float(i)/width, float(j)/height, 0.2);
-    buff[loc] = ray_color(ray(origin, lower_left_corner + u*horizontal + v*vertical), world);
+    buff[loc] = pixel / spp;
 }
 
 int main() {
@@ -75,22 +56,10 @@ int main() {
     const double aspect_ratio = 16.0/9.0;
     int image_width = 600;
     int image_height = image_width/aspect_ratio;
-    int nx = image_width;
-    int ny = image_height;
-    int tx = 8;
-    int ty = 8;
-    //int image_height = static_cast<int>(image_width/aspect_ratio);
-    //const int spp = 50;
-    //const int max_depth = 150;
     int size = image_width * image_height;
-    dim3 blocks(nx/tx+1,ny/ty+1);
-    dim3 threads(tx,ty);
+    dim3 blocks(image_width/32+1,image_height/32+1);
+    dim3 threads(32,32);
 
-    //camera cam(point3(12, 2, 3), point3(0, 0, 0), vec3(0, 1, 0), 30, aspect_ratio);
-    // Worldly
-    //hittable_list world = random_scene();
-    
-    // create pixel buffer
     color *cuda_buff;
     float viewport_height = 2.0;
     float viewport_width = viewport_height*aspect_ratio; 
@@ -108,34 +77,9 @@ int main() {
     }
     render<<<blocks, threads>>>(cuda_buff, image_width, image_height, 
             vec3(-viewport_width/2, -viewport_height/2, -1), 
-            vec3(4, 0, 0), vec3(0, 2, 0), vec3(0, 0, 0), world);
+            vec3(4, 0, 0), vec3(0, 2, 0), vec3(0, 0, 0), world, 150);
 
     cudaDeviceSynchronize();
-    //result = cudaMemcpy(buffer, cuda_buff, size * sizeof(float), cudaMemcpyDeviceToHost);
-    //if(result) {
-    //    std::cerr << "Error copying from GPU memory: " << cudaGetErrorString(result) << std::endl;
-    //    exit(1);
-    //}
-    // Generate the images in a buffer
-    /*
-    for(int j = image_height- 1; j >= 0; j--) {
-        //std::cerr << "\rScanlines remaning: " << j << ' ' << std::flush;
-        for(int i = 0; i < image_width; ++i) {
-            color pixel_color(0, 0, 0);
-            //for(int s = 0; s < spp; s++){
-            //    auto u = (i + random_double()) / (image_width - 1);
-            //    auto v = (j + random_double()) / (image_height - 1);
-            //    ray r = cam.get_ray(u, v);
-            //    pixel_color = pixel_color +  ray_color(r, world, max_depth);
-            //}
-            auto u = (i * 1.0) / (image_width - 1);
-            auto v = (j * 1.0) / (image_height - 1);
-            ray r = cam.get_ray(u, v);
-            pixel_color = ray_color(r, world, max_depth) * 10;
-            buffer[j * image_width + i] = pixel_color;
-        }
-    }
-    */
 
     // Write buffer to ppm format and stdout
     std::cout << "P3\n" << image_width << ' ' << image_height<< "\n255" << std::endl;
@@ -146,9 +90,6 @@ int main() {
             float g = cuda_buff[loc].y();
             float b = cuda_buff[loc].z();
             std::cout << int(255.99 *r) << " " << int(255.99 *g) << " " << int(255.99 *b) << std::endl;
-
-            //color pixel = color(buffer[loc], buffer[loc + 1], buffer[loc + 2]);
-            //write_color(std::cout, buffer[j * image_width + i], spp);
         }
     }
 
