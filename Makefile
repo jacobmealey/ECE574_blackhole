@@ -1,8 +1,8 @@
 NVCC=nvcc -ccbin /usr/bin/g++
-NVCC_FLAGS=-allow-unsupported-compiler
+NVCC_FLAGS=-allow-unsupported-compiler -g -lpapi
 OBJS = main.o ray.o color.o vec3.o
 TARGET = blackhole
-CXXFLAGS = -Wall -O3 -fopenmp
+CXXFLAGS = -Wall -O3
 SRCS := main.cu
 INCS := $(wildcard *.h)
 all: $(TARGET)
