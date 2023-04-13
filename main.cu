@@ -139,8 +139,8 @@ int main() {
     int image_width = 800;
     int image_height = image_width/aspect_ratio;
     int size = image_width * image_height;
-    dim3 blocks(image_width/8+1,image_height/8+1);
-    dim3 threads(8,8);
+    dim3 blocks(image_width/16+1,image_height/16+1);
+    dim3 threads(16,16);
     int count = (22*22) + 4;
     color *cuda_buff;
     float viewport_height = 2.0 *1.5;
