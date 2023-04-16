@@ -140,7 +140,7 @@ int main() {
 
     // Ray tracing variables!
     const float aspect_ratio = 16.0/9.0;
-    int image_width = 800;
+    int image_width = 1200;
     int image_height = image_width/aspect_ratio;
     int size = image_width * image_height;
     dim3 blocks(image_width/16+1,image_height/16+1);
@@ -207,7 +207,7 @@ int main() {
     std::cerr << "Rendering image..." << std::endl;
     render<<<blocks, threads>>>(cuda_buff, image_width, image_height, 
             vec3(-viewport_width/2, -viewport_height/2, -1), 
-            vec3(viewport_width, 0, 0), vec3(0, viewport_height, 0), vec3(0, 0, 0), world, 10, dev_rand_states,
+            vec3(viewport_width, 0, 0), vec3(0, viewport_height, 0), vec3(0, 0, 0), world, 20, dev_rand_states,
             cam);
 
     cudaDeviceSynchronize();
