@@ -161,29 +161,13 @@ __host__ __device__ inline vec3 vecpow(const vec3 &v, float p) {
                 pow(v.e[2], p));
 }
 
-__device__ vec3 random_in_unit_sphere(curandState *st) {
-    while(true) {
-        vec3 p = 2*vec3::random(st) - vec3(1, 1, 1);
-        if(p.length_squared() >= 1) continue;
-        return p;
-    }
-}
 
+
+/*
 __device__ vec3 random_unit_vector(curandState *st) {
     return unit_vector(random_in_unit_sphere(st));
 }
-
-__device__ vec3 reflect(const vec3 &v, const vec3 &n) {
-    return v - 2*dot(v, n)*n;
-}
-
-__device__ vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
-    float cos_theta = fminf(dot(vec3(0, 0, 0)-uv, n), 1);
-    vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
-    vec3 r_out_parallel = -sqrtf(fabs(1.0 - r_out_perp.length_squared())) * n;
-    return r_out_perp + r_out_parallel;
-}
-
+*/
 __device__ vec3 random_in_unit_disk(curandState *st) {
     while (true) {
         auto p = vec3(random_double(-1,1, st), random_double(-1,1, st), 0);
@@ -191,5 +175,25 @@ __device__ vec3 random_in_unit_disk(curandState *st) {
         return p;
     }
 }
+/*
+__device__ vec3 reflect(const vec3 &v, const vec3 &n) {
+    return v - 2*dot(v, n)*n;
+}
+__device__ vec3 random_in_unit_sphere(curandState *st) {
+    while(true) {
+        vec3 p = 2*vec3::random(st) - vec3(1, 1, 1);
+        if(p.length_squared() >= 1) continue;
+        return p;
+    }
+}
+__device__ vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
+    float cos_theta = fminf(dot(vec3(0, 0, 0)-uv, n), 1);
+    vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
+}
+
+
+*/
 
 #endif

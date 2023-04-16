@@ -1,8 +1,7 @@
 NVCC=nvcc -ccbin /usr/bin/g++
-NVCC_FLAGS=-allow-unsupported-compiler -g -lpapi
+NVCC_FLAGS=-allow-unsupported-compiler -lpapi -m64 -gencode arch=compute_60,code=sm_60
 OBJS = main.o ray.o color.o vec3.o
 TARGET = blackhole
-CXXFLAGS = -Wall -O3
 SRCS := main.cu
 INCS := $(wildcard *.h)
 all: $(TARGET)

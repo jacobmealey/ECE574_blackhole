@@ -35,7 +35,7 @@ __device__ color ray_color(const ray &r, hittable **world, int depth, curandStat
         } else {
             vec3 unit_direction = unit_vector(tmp_ray.direction());
             float t = 0.5f*(unit_direction.y() + 1.0f);
-            return  color_scalar*((1.0 - t)*color(1.0f, 1.0f, 1.0f) + t*color(0.5f, 0.7f, 1.0f));
+            return  color_scalar*((1.0f - t)*color(1.0f, 1.0f, 1.0f) + t*color(0.5f, 0.7f, 1.0f));
         }
         depth--;
     } while(depth > 0);
@@ -51,6 +51,7 @@ __global__ void create_world(hittable **list, hittable **world, camera **cam, cu
         *(list + i++) = new sphere(vec3(0, -1000, -1), 1000, new lambertian(color(0.5,0.5,0.5)));
         *(list + i++) = new sphere(vec3(-4, 1, 0), 1, new lambertian(vec3(0.4, 0.2, 0.1)));
         *(list + i++) = new sphere(vec3(0, 1, 0), 1, new dielectric(1.5));
+        //*(list + i++) = new sphere(vec3(0, 1, 0), 1, new metal(vec3(0.7,0, 0), 0));
         *(list + i++) = new sphere(vec3(4, 1, 0), 1, new metal(vec3(0.7, 0.6,0.5), 0));
 
         for(int a = -11; a < 11; a++) {
@@ -65,6 +66,9 @@ __global__ void create_world(hittable **list, hittable **world, camera **cam, cu
                     float fuzz = random_double(0, 0.05, st);
                     *(list + i++) = new sphere(center, 0.2, new metal(albedo, fuzz));
                 } else {
+                    vec3 albedo = color::random(0.5, 1, st);
+                    float fuzz = random_double(0, 0.05, st);
+                    //*(list + i++) = new sphere(center, 0.2, new metal(albedo, fuzz));
                     *(list + i++) = new sphere(center, 0.2, new dielectric(1.5));
                 }
             }
@@ -87,7 +91,7 @@ __global__ void setup_random(int width, int height, curandState *st){
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= width) || (j >= height)) return;
     int loc = j*width + i;
-    curand_init(0xDEADBEEF, loc, 0, st + loc);
+    curand_init(0xDEADBEEF + loc, 0, 0, st + loc);
 }
 
 __global__ void render(color *buff, int width, int height, vec3 lower_left_corner, 
@@ -100,8 +104,8 @@ __global__ void render(color *buff, int width, int height, vec3 lower_left_corne
     int loc = j*width + i;
     color pixel(0, 0, 0);
     for(int s = 0; s < spp; s++) {
-        float u = (float(i) + curand_uniform(st + loc)) / width;
-        float v = (float(j) + curand_uniform(st + loc)) / height;
+        float u = (float(i) + curand_uniform(st + loc)) / float(width);
+        float v = (float(j) + curand_uniform(st + loc)) / float(height);
         ray r = (*cam)->get_ray(u, v, st+loc);
         pixel = pixel + ray_color(r, world, 20, st + loc);
     }
@@ -109,7 +113,7 @@ __global__ void render(color *buff, int width, int height, vec3 lower_left_corne
 
     //buff[loc] = color(float(i)/width, float(j)/height, 0.2);
     float scale = 1.0 / spp;
-    buff[loc] = color(sqrtf(scale * pixel.x()), sqrt(scale * pixel.y()), sqrtf(scale *pixel.z()));
+    buff[loc] = color(sqrt(scale * pixel.x()), sqrt(scale * pixel.y()), sqrt(scale *pixel.z()));
 }
 
 __global__ void cleanup(color *buff, hittable **hit_list, hittable **world, curandState * st) {
@@ -176,14 +180,14 @@ int main() {
     std::cerr << "Allocating Camera" << std::endl;
     result = cudaMalloc((void**) &cam, sizeof(camera *));
 
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
     std::cerr << "Allocating Result buffer" << std::endl;
     result = cudaMalloc((void **) &cuda_buff, size*sizeof(color));
     if(result) {
         std::cerr << "Error allocating GPU memory: " << cudaGetErrorString(result) << std::endl;
         exit(1);
     }
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
     
     allocate_time_fin = PAPI_get_real_usec();
     config_time_start = allocate_time_fin;
@@ -191,11 +195,11 @@ int main() {
     // initialize random number genrerator and create random scene of balls
     std::cerr << "Setting up random number generator" << std::endl;
     setup_random<<<blocks, threads>>>(image_width, image_height, dev_rand_states);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 
     std::cerr << "Generating the world" << std::endl;
     create_world<<<1, 1>>>(hit_list, world, cam, dev_rand_states, count);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 
     config_time_fin = PAPI_get_real_usec();
     render_time_start = config_time_fin;
@@ -203,7 +207,7 @@ int main() {
     std::cerr << "Rendering image..." << std::endl;
     render<<<blocks, threads>>>(cuda_buff, image_width, image_height, 
             vec3(-viewport_width/2, -viewport_height/2, -1), 
-            vec3(viewport_width, 0, 0), vec3(0, viewport_height, 0), vec3(0, 0, 0), world, 100, dev_rand_states,
+            vec3(viewport_width, 0, 0), vec3(0, viewport_height, 0), vec3(0, 0, 0), world, 10, dev_rand_states,
             cam);
 
     cudaDeviceSynchronize();
