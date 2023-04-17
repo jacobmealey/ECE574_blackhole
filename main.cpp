@@ -80,9 +80,9 @@ int main() {
 
     // Image :)
     const double aspect_ratio = 16.0/9.0;
-    const int image_width = 800;
+    const int image_width = 2048;
     const int image_height = static_cast<int>(image_width/aspect_ratio);
-    const int spp = 100;
+    const int spp = 30;
     const int max_depth = 50;
 
     camera cam(point3(12, 2, 3), point3(0, 0, 0), vec3(0, 1, 0), 30, aspect_ratio, 0.1, 10);
