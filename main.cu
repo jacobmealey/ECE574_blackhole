@@ -140,14 +140,14 @@ int main() {
 
     // Ray tracing variables!
     const float aspect_ratio = 16.0/9.0;
-    int image_width = 1200;
+    int image_width = 2048;
     int image_height = image_width/aspect_ratio;
     int size = image_width * image_height;
     dim3 blocks(image_width/16+1,image_height/16+1);
     dim3 threads(16,16);
     int count = (22*22) + 4;
     color *cuda_buff;
-    float viewport_height = 2.0 *1.5;
+    float viewport_height = 1.0;
     float viewport_width = viewport_height*aspect_ratio; 
     curandState *dev_rand_states;
     color *buffer;
